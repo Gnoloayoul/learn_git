@@ -1,8 +1,10 @@
 #include <stdio.h>
 
+void hello(){
+	puts("Hello github!");
+}
+
 int main(){
-	char *a;
-	scanf("%s", &a);
-	printf("%s", &a);
+	hello();
 	return 0;
 }
