@@ -9,7 +9,7 @@ void gLuck(){
 }
 
 void ID(){
-	puts("I done!!!");
+	puts("why £¿£¿£¿£¿£¿£¿");
 }
 
 int main(){
