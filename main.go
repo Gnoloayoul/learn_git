@@ -1,27 +1,69 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"net/http/pprof"
+	"os"
 	"strings"
 )
 
-func main() {
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/healthz", healthzHandler)
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
+func index(w http.ResponseWriter, r *http.Request) {
+	os.Setenv("VERSION", "v0.0.1")
+	version := os.Getenv("VERSION")
+	w.Header().Set("VERSION", version)
+	fmt.Printf("os version: %s \n", version)
 
-func healthzHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("/healthz ClientAddress is " + r.RemoteAddr + " Status Code is " + http.StatusText(200))
-}
-
-func rootHandler(w http.ResponseWriter, r *http.Request) {
 	for k, v := range r.Header {
-		w.Header().Add(k, strings.Join(v, " "))
+		for _, vv := range v {
+			fmt.Printf("Header key: %s, Header value: %s \n", k, v)
+			w.Header().Set(k, vv)
+		}
 	}
-	log.Println("/ ClientAddress is " + r.RemoteAddr + " Status Code is " + http.StatusText(200))
+	clientip := getCurrentIP(r)
+	log.Printf("Success! Response code: %d", 200)
+	log.Printf("Success! clientip: %d", clientip)
+}
+
+func healthz(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "working")
+}
+
+func getCurrentIP(r *http.Request) string {
+	ip := r.Header.Get("X-Real-IP")
+	if ip == "" {
+		ip = strings.Split(r.RemoteAddr, ":")[0]
+	}
+	return ip
+}
+
+func ClientIP(r *http.Request) string {
+	xForwardedFor := r.Header.Get("X-Forwarded-For")
+	ip := strings.TrimSpace(strings.Split(xForwardedFor, ",")[0])
+	if ip != "" {
+		return ip
+	}
+	ip = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
+	if ip != "" {
+		return ip
+	}
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr)); err == nil {
+		return ip
+	}
+	return ""
+}
+
+func main() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/debug/pprof", pprof.Index)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	mux.HandleFunc("/", index)
+	mux.HandleFunc("/healthz", healthz)
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		log.Fatalf("start http server failed, error: %s\n", err.Error())
+	}
 }
