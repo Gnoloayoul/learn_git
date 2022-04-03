@@ -1,69 +1,62 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"log"
-	"net"
+	"io"
 	"net/http"
-	"net/http/pprof"
 	"os"
-	"strings"
+	"os/signal"
 )
 
-func index(w http.ResponseWriter, r *http.Request) {
-	os.Setenv("VERSION", "v0.0.1")
-	version := os.Getenv("VERSION")
-	w.Header().Set("VERSION", version)
-	fmt.Printf("os version: %s \n", version)
-
-	for k, v := range r.Header {
-		for _, vv := range v {
-			fmt.Printf("Header key: %s, Header value: %s \n", k, v)
-			w.Header().Set(k, vv)
-		}
-	}
-	clientip := getCurrentIP(r)
-	log.Printf("Success! Response code: %d", 200)
-	log.Printf("Success! clientip: %d", clientip)
+func StartHttpServer(srv *http.Server) error {
+	http.HandleFunc("/hello", HelloServer2)
+	fmt.Println("http server start")
+	err := srv.ListenAndServe()
+	return err
 }
 
-func healthz(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "working")
-}
-
-func getCurrentIP(r *http.Request) string {
-	ip := r.Header.Get("X-Real-IP")
-	if ip == "" {
-		ip = strings.Split(r.RemoteAddr, ":")[0]
-	}
-	return ip
-}
-
-func ClientIP(r *http.Request) string {
-	xForwardedFor := r.Header.Get("X-Forwarded-For")
-	ip := strings.TrimSpace(strings.Split(xForwardedFor, ",")[0])
-	if ip != "" {
-		return ip
-	}
-	ip = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
-	if ip != "" {
-		return ip
-	}
-	if ip, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr)); err == nil {
-		return ip
-	}
-	return ""
+func HelloServer2(w http.ResponseWriter, req *http.Request) {
+	io.WriteString(w, "hello, world!\n")
 }
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/debug/pprof", pprof.Index)
-	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
-	mux.HandleFunc("/", index)
-	mux.HandleFunc("/healthz", healthz)
-	if err := http.ListenAndServe(":8080", mux); err != nil {
-		log.Fatalf("start http server failed, error: %s\n", err.Error())
+	ctx := context.Background()
+	// 定义 withCancel -> cancel() 方法 去取消下游的 Context
+	ctx, cancel := context.WithCancel(ctx)
+	// 使用 errgroup 进行 goroutine 取消
+	group, errCtx := errgroup.WithContext(ctx)
+	//http server
+	srv := &http.Server{Addr: ":9090"}
+
+	group.Go(func() error {
+		return StartHttpServer(srv)
+	})
+
+	group.Go(func() error {
+		<-errCtx.Done() //阻塞。因为 cancel、timeout、deadline 都可能导致 Done 被 close
+		fmt.Println("http server stop")
+		return srv.Shutdown(errCtx) // 关闭 http server
+	})
+
+	chanel := make(chan os.Signal, 1) //这里要用 buffer 为1的 chan
+	signal.Notify(chanel)
+
+	group.Go(func() error {
+		for {
+			select {
+			case <-errCtx.Done(): // 因为 cancel、timeout、deadline 都可能导致 Done 被 close
+				return errCtx.Err()
+			case <-chanel: // 因为 kill -9 或其他而终止
+				cancel()
+			}
+		}
+		return nil
+	})
+
+	if err := group.Wait(); err != nil {
+		fmt.Println("group error: ", err)
 	}
+	fmt.Println("all group done!")
+
 }
