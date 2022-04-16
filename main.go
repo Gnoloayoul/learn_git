@@ -1,62 +1,36 @@
-package main
-
-import (
-	"context"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"os/signal"
-)
-
-func StartHttpServer(srv *http.Server) error {
-	http.HandleFunc("/hello", HelloServer2)
-	fmt.Println("http server start")
-	err := srv.ListenAndServe()
-	return err
-}
-
-func HelloServer2(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "hello, world!\n")
-}
-
-func main() {
-	ctx := context.Background()
-	// å®šä¹‰ withCancel -> cancel() æ–¹æ³• å»å–æ¶ˆä¸‹æ¸¸çš„ Context
-	ctx, cancel := context.WithCancel(ctx)
-	// ä½¿ç”¨ errgroup è¿›è¡Œ goroutine å–æ¶ˆ
-	group, errCtx := errgroup.WithContext(ctx)
-	//http server
-	srv := &http.Server{Addr: ":9090"}
-
-	group.Go(func() error {
-		return StartHttpServer(srv)
-	})
-
-	group.Go(func() error {
-		<-errCtx.Done() //é˜»å¡ã€‚å› ä¸º cancelã€timeoutã€deadline éƒ½å¯èƒ½å¯¼è‡´ Done è¢« close
-		fmt.Println("http server stop")
-		return srv.Shutdown(errCtx) // å…³é—­ http server
-	})
-
-	chanel := make(chan os.Signal, 1) //è¿™é‡Œè¦ç”¨ buffer ä¸º1çš„ chan
-	signal.Notify(chanel)
-
-	group.Go(func() error {
-		for {
-			select {
-			case <-errCtx.Done(): // å› ä¸º cancelã€timeoutã€deadline éƒ½å¯èƒ½å¯¼è‡´ Done è¢« close
-				return errCtx.Err()
-			case <-chanel: // å› ä¸º kill -9 æˆ–å…¶ä»–è€Œç»ˆæ­¢
-				cancel()
-			}
-		}
-		return nil
-	})
-
-	if err := group.Wait(); err != nil {
-		fmt.Println("group error: ", err)
-	}
-	fmt.Println("all group done!")
-
+public class CounterRateLimiter extends MyRateLimiter {
+    /**
+     * Ã¿ÃëÏŞÖÆÇëÇóÊı
+     */
+    private final long permitsPerSecond;
+    /**
+     * ÉÏÒ»¸ö´°¿ÚµÄ¿ªÊ¼Ê±¼ä
+     */
+    public long timestamp = System.currentTimeMillis();
+    /**
+     * ¼ÆÊıÆ÷
+     */
+    private int counter;
+ 
+    public CounterRateLimiter(long permitsPerSecond) {
+        this.permitsPerSecond = permitsPerSecond;
+    }
+ 
+    @Override
+    public synchronized boolean tryAcquire() {
+        long now = System.currentTimeMillis();
+        // ´°¿ÚÄÚÇëÇóÊıÁ¿Ğ¡ÓÚãĞÖµ£¬¸üĞÂ¼ÆÊı·ÅĞĞ£¬·ñÔò¾Ü¾øÇëÇó
+        if (now - timestamp < 1000) {
+            if (counter < permitsPerSecond) {
+                counter++;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        // Ê±¼ä´°¿Ú¹ıÆÚ£¬ÖØÖÃ¼ÆÊıÆ÷ºÍÊ±¼ä´Á
+        counter = 0;
+        timestamp = now;
+        return true;
+    }
 }
