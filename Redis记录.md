@@ -1,23 +1,24 @@
-# °²×°
-ubuntu@VM-0-11-ubuntu:~$ redis-server
+# å®‰è£…
+$ redis-server
 13166:C 08 May 2022 18:59:59.859 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
 13166:C 08 May 2022 18:59:59.859 # Redis version=5.0.7, bits=64, commit=00000000, modified=0, pid=13166, just started
 13166:C 08 May 2022 18:59:59.859 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
 13166:M 08 May 2022 18:59:59.860 * Increased maximum number of open files to 10032 (it was originally set to 1024).
 13166:M 08 May 2022 18:59:59.860 # Could not create server TCP listening socket *:6379: bind: Address already in use
-ubuntu@VM-0-11-ubuntu:~$ redis-cli
+
+$ redis-cli
 127.0.0.1:6379> ping
 PONG
 127.0.0.1:6379> 
 
-¡¾µ½Õâ£¬ redis³É¹¦°²×° 2022Äê5ÔÂ8ÈÕ¡¿
+ã€åˆ°è¿™ï¼Œ redisæˆåŠŸå®‰è£… 2022å¹´5æœˆ8æ—¥ã€‘
 
-# ÈÎÎñ
-## 1.Ê¹ÓÃ redis benchmark ¹¤¾ß, ²âÊÔ 10 20 50 100 200 1k 5k ×Ö½Ú value ´óĞ¡£¬redis get set ĞÔÄÜ¡£
+# ä»»åŠ¡
+## 1.ä½¿ç”¨ redis benchmark å·¥å…·, æµ‹è¯• 10 20 50 100 200 1k 5k å­—èŠ‚ value å¤§å°ï¼Œredis get set æ€§èƒ½ã€‚
 
-### ²âÊÔ10×Ö½Ú
+### æµ‹è¯•10å­—èŠ‚
 
-ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 10 -t GET,SET
+$ sudo redis-benchmark -d 10 -t GET,SET
 ====== SET ======
   100000 requests completed in 1.80 seconds
   50 parallel clients
@@ -50,9 +51,9 @@ ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 10 -t GET,SET
 100.00% <= 8 milliseconds
 53106.74 requests per second
 
-### ²âÊÔ20×Ö½Ú
+### æµ‹è¯•20å­—èŠ‚
 
-ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 20 -t GET,SET
+$ sudo redis-benchmark -d 20 -t GET,SET
 ====== SET ======
   100000 requests completed in 1.81 seconds
   50 parallel clients
@@ -85,9 +86,9 @@ ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 20 -t GET,SET
 100.00% <= 13 milliseconds
 53304.90 requests per second
 
-### ²âÊÔ50×Ö½Ú
+### æµ‹è¯•50å­—èŠ‚
 
-ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 50 -t GET,SET
+$ sudo redis-benchmark -d 50 -t GET,SET
 ====== SET ======
   100000 requests completed in 2.03 seconds
   50 parallel clients
@@ -123,9 +124,9 @@ ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 50 -t GET,SET
 100.00% <= 7 milliseconds
 50251.26 requests per second
 
-### ²âÊÔ100×Ö½Ú
+### æµ‹è¯•100å­—èŠ‚
 
-ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 100 -t GET,SET
+$ sudo redis-benchmark -d 100 -t GET,SET
 ====== SET ======
   100000 requests completed in 1.78 seconds
   50 parallel clients
@@ -156,9 +157,9 @@ ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 100 -t GET,SET
 100.00% <= 6 milliseconds
 55157.20 requests per second
 
-### ²âÊÔ200×Ö½Ú
+### æµ‹è¯•200å­—èŠ‚
 
-ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 200 -t GET,SET
+$ sudo redis-benchmark -d 200 -t GET,SET
 ====== SET ======
   100000 requests completed in 1.90 seconds
   50 parallel clients
@@ -192,9 +193,9 @@ ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 200 -t GET,SET
 100.00% <= 7 milliseconds
 53590.57 requests per second
 
-### ²âÊÔ1k×Ö½Ú
+### æµ‹è¯•1kå­—èŠ‚
 
-ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 1000 -t GET,SET
+$ sudo redis-benchmark -d 1000 -t GET,SET
 ====== SET ======
   100000 requests completed in 1.84 seconds
   50 parallel clients
@@ -225,9 +226,9 @@ ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 1000 -t GET,SET
 100.00% <= 7 milliseconds
 49701.79 requests per second
 
-### ²âÊÔ5k×Ö½Ú
+### æµ‹è¯•5kå­—èŠ‚
 
-ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 5000 -t GET,SET
+$ sudo redis-benchmark -d 5000 -t GET,SET
 ====== SET ======
   100000 requests completed in 2.17 seconds
   50 parallel clients
@@ -261,9 +262,9 @@ ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 5000 -t GET,SET
 
 
 
-## 2.Ğ´ÈëÒ»¶¨Á¿µÄ kv Êı¾İ, ¸ù¾İÊı¾İ´óĞ¡ 1w-50w ×Ô¼ºÆÀ¹À, ½áºÏĞ´ÈëÇ°ºóµÄ info memory ĞÅÏ¢ , ·ÖÎöÉÏÊö²»Í¬ value ´óĞ¡ÏÂ£¬Æ½¾ùÃ¿¸ö key µÄÕ¼ÓÃÄÚ´æ¿Õ¼ä¡£
+## 2.å†™å…¥ä¸€å®šé‡çš„ kv æ•°æ®, æ ¹æ®æ•°æ®å¤§å° 1w-50w è‡ªå·±è¯„ä¼°, ç»“åˆå†™å…¥å‰åçš„ info memory ä¿¡æ¯ , åˆ†æä¸Šè¿°ä¸åŒ value å¤§å°ä¸‹ï¼Œå¹³å‡æ¯ä¸ª key çš„å ç”¨å†…å­˜ç©ºé—´ã€‚
 
-ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 3000 -n 5000000 -t GET,SET
+$ sudo redis-benchmark -d 3000 -n 5000000 -t GET,SET
 ====== SET ======
   5000000 requests completed in 95.02 seconds
   50 parallel clients
@@ -307,7 +308,7 @@ ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 3000 -n 5000000 -t GET,SET
 48255.56 requests per second
 
 
-ubuntu@VM-0-11-ubuntu:~$ sudo redis-benchmark -d 3000 -r 10000  -n 5000000 -t GET,SET
+$ sudo redis-benchmark -d 3000 -r 10000  -n 5000000 -t GET,SET
 ====== SET ======
   5000000 requests completed in 97.80 seconds
   50 parallel clients
